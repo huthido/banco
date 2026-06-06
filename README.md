@@ -62,7 +62,8 @@ Repo có sẵn `Dockerfile` (multi-stage). Trên Coolify:
 4. ⚠️ **Replicas = 1 (bắt buộc).** Trạng thái ván lưu **in-memory** (`globalThis`), không chia sẻ
    giữa nhiều instance — chạy >1 replica sẽ vỡ phòng/realtime.
 5. Env (tuỳ chọn): `HOST=0.0.0.0` (mặc định trong image). Coolify tự cấp `PORT`.
-6. Health check: GET `/` trả 200.
+6. Health check: endpoint **`/api/health`** trả `{"status":"ok"}` (200). Dockerfile đã có sẵn
+   `HEALTHCHECK`; trong Coolify có thể đặt Health Check Path = `/api/health`.
 
 Build & chạy thử bằng Docker tại máy:
 
