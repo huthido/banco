@@ -18,6 +18,8 @@ export type Room = {
   id: string;
   gameType: GameType;
   status: RoomStatus;
+  /** Phòng công khai sẽ hiện ở sảnh chờ trang chủ; ai cũng ngồi được ghế trống. */
+  isPublic: boolean;
   players: { first?: PlayerSlot; second?: PlayerSlot };
   spectators: Map<string, { name: string; socketId: string }>;
   /** Trạng thái bàn cờ do engine quản lý. */
@@ -42,6 +44,7 @@ export type RoomSnapshot = {
   id: string;
   gameType: GameType;
   status: RoomStatus;
+  isPublic: boolean;
   players: { first: PublicPlayer; second: PublicPlayer };
   spectatorCount: number;
   state: unknown;
@@ -51,4 +54,15 @@ export type RoomSnapshot = {
   rematch: { first: boolean; second: boolean };
   /** Vai trò của chính người nhận snapshot này. */
   you: { role: Role; side: Side | null };
+};
+
+/** Tóm tắt một phòng công khai để hiển thị ở sảnh chờ trang chủ. */
+export type PublicRoomInfo = {
+  id: string;
+  gameType: GameType;
+  /** Tên chủ phòng đang chờ đối thủ. */
+  host: string;
+  /** Phe còn trống mà người mới sẽ ngồi vào. */
+  openSide: Side;
+  createdAt: number;
 };

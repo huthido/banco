@@ -44,7 +44,12 @@ export type UseRoom = {
 type BoardSay = { id: number; name: string; text: string };
 export type BoardMessages = { first?: BoardSay; second?: BoardSay };
 
-export function useRoom(roomId: string, name: string, inviteToken?: string): UseRoom {
+export function useRoom(
+  roomId: string,
+  name: string,
+  inviteToken?: string,
+  wantPlay = false
+): UseRoom {
   const [connected, setConnected] = useState(false);
   const [snapshot, setSnapshot] = useState<RoomSnapshot | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -66,8 +71,9 @@ export function useRoom(roomId: string, name: string, inviteToken?: string): Use
   useEffect(() => {
     if (!name) return; // chưa nhập tên thì chưa kết nối
     const playerId = getPlayerId();
-    // role: có token => xin làm player; không token => spectator.
-    const role: Role = inviteToken ? "player" : "spectator";
+    // role: có token (link mời) hoặc vào từ sảnh công khai => xin làm player;
+    // còn lại => spectator.
+    const role: Role = inviteToken || wantPlay ? "player" : "spectator";
 
     const socket: AppSocket = io({ transports: ["websocket", "polling"] });
     socketRef.current = socket;
@@ -124,7 +130,7 @@ export function useRoom(roomId: string, name: string, inviteToken?: string): Use
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [roomId, name, inviteToken, pushNotice]);
+  }, [roomId, name, inviteToken, wantPlay, pushNotice]);
 
   // Tự lưu bàn cờ vào IndexedDB mỗi khi trạng thái đổi (để mở lại / mời lại sau).
   useEffect(() => {

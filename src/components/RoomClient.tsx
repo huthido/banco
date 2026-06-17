@@ -24,9 +24,17 @@ import type { CheckersState } from "@/lib/games/checkers";
 import type { GoState } from "@/lib/games/go";
 import { formatResult, isMyTurn } from "@/func";
 
-export function RoomClient({ roomId, inviteToken }: { roomId: string; inviteToken?: string }) {
+export function RoomClient({
+  roomId,
+  inviteToken,
+  wantPlay,
+}: {
+  roomId: string;
+  inviteToken?: string;
+  wantPlay?: boolean;
+}) {
   const [name, setName] = useState("");
-  const room = useRoom(roomId, name, inviteToken);
+  const room = useRoom(roomId, name, inviteToken, wantPlay);
   const { snapshot, result, notices, joinError } = room;
 
   if (!name) return <NameDialog onSubmit={setName} />;

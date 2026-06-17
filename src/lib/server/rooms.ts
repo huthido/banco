@@ -1,5 +1,5 @@
 import type { GameType, Side } from "@/types/game";
-import type { Room, RoomSnapshot, Role, PublicPlayer, PlayerSlot } from "@/types/room";
+import type { Room, RoomSnapshot, Role, PublicPlayer, PlayerSlot, PublicRoomInfo } from "@/types/room";
 import { genRoomId, genToken, otherSide } from "@/func";
 import { getEngine, isGameSupported } from "@/lib/games";
 import type { RoomRestore } from "@/types/events";
@@ -25,7 +25,7 @@ const ROOM_TTL_MS = 1000 * 60 * 60 * 6; // 6 giờ
 const EMPTY_GRACE_MS = 1000 * 60 * 10; // phòng trống quá 10 phút thì dọn
 
 /** Tạo phòng mới, người tạo sẽ là phe `hostSide`. Trả về room. */
-export function createRoom(gameType: GameType, hostSide: Side = "first"): Room {
+export function createRoom(gameType: GameType, hostSide: Side = "first", isPublic = false): Room {
   const engine = getEngine(gameType);
   let id = genRoomId();
   while (rooms.has(id)) id = genRoomId();
@@ -34,6 +34,7 @@ export function createRoom(gameType: GameType, hostSide: Side = "first"): Room {
     id,
     gameType,
     status: "waiting",
+    isPublic,
     players: {},
     spectators: new Map(),
     state: engine.createInitialState(),
@@ -77,6 +78,7 @@ export function restoreRoom(roomId: string, data: RoomRestore): Room | null {
     id: roomId,
     gameType: data.gameType,
     status,
+    isPublic: false,
     players: {},
     spectators: new Map(),
     state: data.state ?? engine.createInitialState(),
@@ -142,8 +144,8 @@ export function joinRoom(
     return { role: "player", side, reconnected: false };
   }
 
-  // 3) Đối thủ vào bằng link mời (token đúng) và còn slot trống.
-  if (wantPlayer && tokenOk && (firstOpen || secondOpen)) {
+  // 3) Đối thủ vào bằng link mời (token đúng) HOẶC phòng công khai, và còn slot trống.
+  if (wantPlayer && (tokenOk || room.isPublic) && (firstOpen || secondOpen)) {
     const side: Side = firstOpen ? "first" : "second";
     seat(room, side, playerId, name, socketId);
     return { role: "player", side, reconnected: false };
@@ -211,6 +213,7 @@ export function snapshotFor(room: Room, you: { role: Role; side: Side | null }):
     id: room.id,
     gameType: room.gameType,
     status: room.status,
+    isPublic: room.isPublic,
     players: { first: pub(room.players.first), second: pub(room.players.second) },
     spectatorCount: room.spectators.size,
     state: room.state,
@@ -228,6 +231,33 @@ export function snapshotFor(room: Room, you: { role: Role; side: Side | null }):
 /** Phe đối diện đã sẵn sàng rematch chưa (cả 2 phe đồng ý). */
 export function bothWantRematch(room: Room): boolean {
   return room.rematchVotes.has("first") && room.rematchVotes.has("second");
+}
+
+/**
+ * Danh sách phòng công khai đang chờ đối thủ: phải đang ở trạng thái `waiting`,
+ * có chủ phòng ĐANG kết nối và còn đúng 1 ghế trống để người mới ngồi vào.
+ */
+export function listPublicRooms(): PublicRoomInfo[] {
+  const out: PublicRoomInfo[] = [];
+  for (const room of rooms.values()) {
+    if (!room.isPublic || room.status !== "waiting") continue;
+    const { first, second } = room.players;
+    // Khi waiting, tối đa 1 ghế có người -> phe còn trống là phe chưa có slot.
+    const openSide: Side | null = !first ? "first" : !second ? "second" : null;
+    if (!openSide) continue;
+    const host = first ?? second;
+    if (!host || !host.connected) continue; // chủ phòng phải còn online
+    out.push({
+      id: room.id,
+      gameType: room.gameType,
+      host: host.name,
+      openSide,
+      createdAt: room.createdAt,
+    });
+  }
+  // Mới tạo gần đây lên đầu.
+  out.sort((a, b) => b.createdAt - a.createdAt);
+  return out;
 }
 
 export { otherSide };

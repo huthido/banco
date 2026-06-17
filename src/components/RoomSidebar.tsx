@@ -50,7 +50,7 @@ export function RoomSidebar({
   meta: GameMeta;
   inviteToken?: string;
 }) {
-  const { players, turn, status, you, spectatorCount } = snapshot;
+  const { players, turn, status, you, spectatorCount, isPublic } = snapshot;
 
   const statusText =
     status === "waiting"
@@ -62,7 +62,14 @@ export function RoomSidebar({
   return (
     <aside className="w-full space-y-5">
       <div>
-        <h2 className="text-lg font-semibold">{meta.name}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold">{meta.name}</h2>
+          {isPublic && (
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+              🌐 Công khai
+            </span>
+          )}
+        </div>
         <p className="text-sm text-slate-500 dark:text-slate-400">{statusText}</p>
         <Link
           href={`/guide/${meta.type}`}

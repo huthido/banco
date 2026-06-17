@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GAME_CATALOG } from "@/lib/games";
 import { CreateRoomButton } from "@/components/CreateRoomButton";
+import { PublicLobby } from "@/components/PublicLobby";
 import { SavedBoards } from "@/components/SavedBoards";
 import { GameHistory } from "@/components/GameHistory";
 
@@ -13,6 +14,8 @@ export default function HomePage() {
           Tạo bàn cờ, mời đối thủ và người xem chỉ bằng một đường link.
         </p>
       </header>
+
+      <PublicLobby />
 
       <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {GAME_CATALOG.map((g) => (
