@@ -4,6 +4,21 @@ export type Role = "player" | "spectator";
 
 export type RoomStatus = "waiting" | "playing" | "finished";
 
+/** Cấu hình thời gian của phòng (đồng hồ cờ). */
+export type TimeControl =
+  | { mode: "unlimited" }
+  | { mode: "limited"; baseMs: number; incrementMs: number };
+
+/** Trạng thái đồng hồ runtime (server). Chỉ tồn tại khi timeControl.mode === "limited". */
+export type ClockState = {
+  /** Thời gian còn lại mỗi bên TẠI thời điểm `turnStartedAt` (giá trị "đang đếm" được suy ra). */
+  remainingMs: { first: number; second: number };
+  /** Bên đang chạy đồng hồ; null khi chưa bắt đầu / đã kết thúc. */
+  running: Side | null;
+  /** Epoch ms thời điểm server bắt đầu tính cho lượt hiện tại. */
+  turnStartedAt: number | null;
+};
+
 /** Một slot người chơi trong phòng (server-side). */
 export type PlayerSlot = {
   /** id ổn định lưu ở localStorage để reconnect giữ slot. */
@@ -31,6 +46,10 @@ export type Room = {
   /** Theo dõi ai đã bấm "đánh lại". */
   rematchVotes: Set<Side>;
   createdAt: number;
+  /** Cấu hình thời gian của phòng. */
+  timeControl: TimeControl;
+  /** Trạng thái đồng hồ (chỉ khi timeControl.mode === "limited"). */
+  clock?: ClockState;
 };
 
 /** Thông tin một người chơi gửi xuống client (không lộ socketId nội bộ là ok). */
@@ -52,6 +71,15 @@ export type RoomSnapshot = {
   turn: Side;
   result?: GameResult;
   rematch: { first: boolean; second: boolean };
+  /** Cấu hình thời gian của phòng. */
+  timeControl: TimeControl;
+  /** Trạng thái đồng hồ gửi cho client (đã tính sẵn thời gian còn lại tại serverNow). */
+  clock?: {
+    remainingMs: { first: number; second: number };
+    running: Side | null;
+    /** Mốc đồng hồ server để client hiệu chỉnh lệch giờ + nội suy. */
+    serverNow: number;
+  };
   /** Vai trò của chính người nhận snapshot này. */
   you: { role: Role; side: Side | null };
 };

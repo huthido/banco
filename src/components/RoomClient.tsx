@@ -16,6 +16,7 @@ import { BoardMessageOverlay } from "./BoardMessageOverlay";
 import { BoardSay } from "./BoardSay";
 import { MoveHistory } from "./MoveHistory";
 import { Chat } from "./Chat";
+import { GameClock } from "./GameClock";
 import { GAME_CATALOG } from "@/lib/games";
 import type { GomokuState } from "@/lib/games/gomoku";
 import type { ChessState } from "@/lib/games/chess";
@@ -82,6 +83,24 @@ export function RoomClient({
             cao hơn khung vẫn cuộn lên xem được phần trên, không bị cắt. */}
         <div className="flex-1 lg:flex lg:overflow-auto lg:py-2">
           <div className="flex flex-col items-center lg:m-auto">
+            {/* Đồng hồ cờ — chỉ hiện khi bàn bật giới hạn thời gian */}
+            {room.liveClock && (
+              <div className="mb-3 flex items-center gap-3">
+                <GameClock
+                  label={meta.sides[0]}
+                  name={snapshot.players.first?.name}
+                  ms={room.liveClock.remainingMs.first}
+                  active={room.liveClock.running === "first" && snapshot.status === "playing"}
+                />
+                <GameClock
+                  label={meta.sides[1]}
+                  name={snapshot.players.second?.name}
+                  ms={room.liveClock.remainingMs.second}
+                  active={room.liveClock.running === "second" && snapshot.status === "playing"}
+                />
+              </div>
+            )}
+
             {/* Bàn cờ + lớp phủ emoji bay lên */}
             <div className="relative">
               {snapshot.gameType === "gomoku" && (

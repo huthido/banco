@@ -16,6 +16,10 @@ Tạo bàn cờ, mời đối thủ và người xem chỉ bằng một đườn
   **bỏ lượt 2 lần → tính điểm theo vùng** (komi 6.5).
 - ✅ Tạo bàn → **link mời đối thủ** (kèm token giành ghế) + **link mời người xem**.
 - ✅ Realtime qua Socket.IO: đi quân, đổi lượt, kết quả, chat, lịch sử nước đi.
+- ✅ **Đồng hồ cờ (time control)** — chọn mốc thời gian khi tạo bàn (1/3/5/10 phút, tùy chọn cộng
+  giây mỗi nước); đồng hồ do **server làm chủ**, hết giờ là thua; hiển thị realtime cho người chơi &
+  người xem (nổi bật bên tới lượt, cảnh báo khi <10s). Áp dụng cho mọi loại cờ. Xem
+  [`specs/001-game-clock/`](specs/001-game-clock/) (đặc tả theo Spec Kit).
 - ✅ **Thả cảm xúc trực tiếp** — người chơi & người xem bấm emoji (👍🔥😂😮❤️), bay lên trên
   bàn cờ realtime cho mọi người thấy (`reaction:send`/`reaction:burst`).
 - ✅ **Nhắn tin trên bàn cờ** — 2 người chơi gửi tin nhanh (kèm câu mẫu), hiện thành bong bóng

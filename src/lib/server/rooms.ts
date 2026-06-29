@@ -1,8 +1,9 @@
 import type { GameType, Side } from "@/types/game";
-import type { Room, RoomSnapshot, Role, PublicPlayer, PlayerSlot, PublicRoomInfo } from "@/types/room";
+import type { Room, RoomSnapshot, Role, PublicPlayer, PlayerSlot, PublicRoomInfo, TimeControl } from "@/types/room";
 import { genRoomId, genToken, otherSide } from "@/func";
 import { getEngine, isGameSupported } from "@/lib/games";
 import type { RoomRestore } from "@/types/events";
+import { initClock, startTurn, applyMove as clockApplyMove, stop as clockStop, liveRemaining } from "./clock";
 
 /**
  * Kho phòng in-memory. Lưu trên globalThis để API route của Next (dev mode chạy
@@ -25,7 +26,12 @@ const ROOM_TTL_MS = 1000 * 60 * 60 * 6; // 6 giờ
 const EMPTY_GRACE_MS = 1000 * 60 * 10; // phòng trống quá 10 phút thì dọn
 
 /** Tạo phòng mới, người tạo sẽ là phe `hostSide`. Trả về room. */
-export function createRoom(gameType: GameType, hostSide: Side = "first", isPublic = false): Room {
+export function createRoom(
+  gameType: GameType,
+  hostSide: Side = "first",
+  isPublic = false,
+  timeControl: TimeControl = { mode: "unlimited" }
+): Room {
   const engine = getEngine(gameType);
   let id = genRoomId();
   while (rooms.has(id)) id = genRoomId();
@@ -43,6 +49,8 @@ export function createRoom(gameType: GameType, hostSide: Side = "first", isPubli
     turn: "first",
     rematchVotes: new Set<Side>(),
     createdAt: Date.now(),
+    timeControl,
+    clock: initClock(timeControl),
   };
   rooms.set(id, room);
   // Lưu host muốn ngồi phe nào (xử lý khi họ join qua socket).
@@ -88,6 +96,9 @@ export function restoreRoom(roomId: string, data: RoomRestore): Room | null {
     result: data.result,
     rematchVotes: new Set<Side>(),
     createdAt: Date.now(),
+    // MVP: khôi phục phòng không kèm đồng hồ (xem Assumptions trong spec — độ chính xác
+    // tuyệt đối sau restart ngoài phạm vi v1). Phòng khôi phục chạy ở chế độ không giới hạn.
+    timeControl: { mode: "unlimited" },
   };
   rooms.set(roomId, room);
   // Giữ đúng phe cho người khôi phục khi họ join ngay sau đó.
@@ -189,6 +200,28 @@ export function handleDisconnect(
   return affected;
 }
 
+/**
+ * Bắt đầu đếm giờ cho bên đang tới lượt khi ván vừa vào trạng thái "playing"
+ * (chỉ khi có đồng hồ và chưa chạy). An toàn khi gọi nhiều lần.
+ */
+export function startClock(room: Room, now: number): void {
+  if (room.clock && room.clock.running === null && room.status === "playing") {
+    room.clock = startTurn(room.clock, room.turn, now);
+  }
+}
+
+/** Cập nhật đồng hồ sau khi `mover` đi một nước hợp lệ (trừ giờ + increment + đổi bên). */
+export function advanceClock(room: Room, mover: Side, now: number): void {
+  if (!room.clock) return;
+  const inc = room.timeControl.mode === "limited" ? room.timeControl.incrementMs : 0;
+  room.clock = clockApplyMove(room.clock, mover, now, inc);
+}
+
+/** Dừng đồng hồ khi ván kết thúc (mọi lý do). */
+export function stopClock(room: Room, now: number): void {
+  if (room.clock) room.clock = clockStop(room.clock, now);
+}
+
 /** Reset ván cho rematch: đổi state mới, giữ nguyên người chơi, hoán phe. */
 export function resetForRematch(room: Room) {
   const engine = getEngine(room.gameType);
@@ -197,6 +230,8 @@ export function resetForRematch(room: Room) {
   room.turn = "first";
   room.result = undefined;
   room.rematchVotes.clear();
+  // Đặt lại đồng hồ theo cấu hình ban đầu của phòng (FR-008).
+  room.clock = initClock(room.timeControl);
   // Hoán phe để công bằng.
   const { first, second } = room.players;
   room.players.first = second;
@@ -208,6 +243,18 @@ export function resetForRematch(room: Room) {
 export function snapshotFor(room: Room, you: { role: Role; side: Side | null }): RoomSnapshot {
   const pub = (slot?: PlayerSlot): PublicPlayer =>
     slot ? { name: slot.name, connected: slot.connected } : null;
+
+  const now = Date.now();
+  const clock = room.clock
+    ? {
+        remainingMs: {
+          first: liveRemaining(room.clock, "first", now),
+          second: liveRemaining(room.clock, "second", now),
+        },
+        running: room.clock.running,
+        serverNow: now,
+      }
+    : undefined;
 
   return {
     id: room.id,
@@ -224,6 +271,8 @@ export function snapshotFor(room: Room, you: { role: Role; side: Side | null }):
       first: room.rematchVotes.has("first"),
       second: room.rematchVotes.has("second"),
     },
+    timeControl: room.timeControl,
+    clock,
     you,
   };
 }
@@ -257,6 +306,28 @@ export function listPublicRooms(): PublicRoomInfo[] {
   }
   // Mới tạo gần đây lên đầu.
   out.sort((a, b) => b.createdAt - a.createdAt);
+  return out;
+}
+
+/** Dữ liệu đồng bộ đồng hồ cho các phòng đang có đồng hồ chạy (để emit định kỳ). */
+export function listClockSyncs(): {
+  id: string;
+  remainingMs: { first: number; second: number };
+  running: Side;
+  serverNow: number;
+}[] {
+  const now = Date.now();
+  const out: ReturnType<typeof listClockSyncs> = [];
+  for (const room of rooms.values()) {
+    const c = room.clock;
+    if (room.status !== "playing" || !c || c.running === null) continue;
+    out.push({
+      id: room.id,
+      remainingMs: { first: liveRemaining(c, "first", now), second: liveRemaining(c, "second", now) },
+      running: c.running,
+      serverNow: now,
+    });
+  }
   return out;
 }
 

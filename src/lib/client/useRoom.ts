@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 import type { ClientToServerEvents, ServerToClientEvents, ChatMessage } from "@/types/events";
 import type { RoomSnapshot, Role } from "@/types/room";
@@ -23,9 +23,16 @@ function getPlayerId(): string {
 
 export type Notice = { id: string; text: string; kind: "info" | "error" };
 
+/** Đồng hồ đã nội suy phía client để hiển thị mượt (đếm lùi giữa các snapshot). */
+export type LiveClock = {
+  remainingMs: { first: number; second: number };
+  running: Side | null;
+} | null;
+
 export type UseRoom = {
   connected: boolean;
   snapshot: RoomSnapshot | null;
+  liveClock: LiveClock;
   messages: ChatMessage[];
   notices: Notice[];
   result: GameResult | null;
@@ -58,6 +65,8 @@ export function useRoom(
   const [joinError, setJoinError] = useState<string | null>(null);
   const [reactions, setReactions] = useState<{ id: string; emoji: string }[]>([]);
   const [boardMessages, setBoardMessages] = useState<BoardMessages>({});
+  const [clockTick, setClockTick] = useState(0);
+  const clockRecvAt = useRef(0);
   const saySeq = useRef(0);
   const socketRef = useRef<AppSocket | null>(null);
   const noticeSeq = useRef(0);
@@ -91,19 +100,31 @@ export function useRoom(
           "room:join",
           { roomId, role, name, playerId, inviteToken, restore },
           (res) => {
-            if (res.ok) setSnapshot(res.snapshot);
-            else setJoinError(res.error);
+            if (res.ok) {
+              clockRecvAt.current = Date.now();
+              setSnapshot(res.snapshot);
+            } else setJoinError(res.error);
           }
         );
       });
     });
     socket.on("disconnect", () => setConnected(false));
     socket.on("room:state", (snap) => {
+      clockRecvAt.current = Date.now();
       setSnapshot(snap);
       if (snap.result) setResult(snap.result);
       else setResult(null);
     });
     socket.on("game:over", (r) => setResult(r));
+    socket.on("clock:sync", (c) => {
+      if (c.roomId !== roomId) return;
+      clockRecvAt.current = Date.now();
+      setSnapshot((prev) =>
+        prev && prev.clock
+          ? { ...prev, clock: { remainingMs: c.remainingMs, running: c.running, serverNow: c.serverNow } }
+          : prev
+      );
+    });
     socket.on("chat:message", (m) => setMessages((prev) => [...prev, m]));
     socket.on("reaction:burst", (r) => {
       setReactions((prev) => [...prev.slice(-40), { id: r.id, emoji: r.emoji }]);
@@ -131,6 +152,32 @@ export function useRoom(
       socketRef.current = null;
     };
   }, [roomId, name, inviteToken, wantPlay, pushNotice]);
+
+  // Nhịp đếm lùi phía client (250ms) khi có đồng hồ đang chạy.
+  const clockRunning = snapshot?.clock?.running ?? null;
+  const isPlaying = snapshot?.status === "playing";
+  useEffect(() => {
+    if (!clockRunning || !isPlaying) return;
+    const t = setInterval(() => setClockTick((n) => n + 1), 250);
+    return () => clearInterval(t);
+  }, [clockRunning, isPlaying]);
+
+  // Đồng hồ nội suy: trừ thời gian đã trôi kể từ snapshot gần nhất cho bên đang chạy.
+  const liveClock: LiveClock = useMemo(() => {
+    const c = snapshot?.clock;
+    if (!c) return null;
+    const elapsed = c.running ? Math.max(0, Date.now() - clockRecvAt.current) : 0;
+    return {
+      running: c.running,
+      remainingMs: {
+        first: c.running === "first" ? Math.max(0, c.remainingMs.first - elapsed) : c.remainingMs.first,
+        second:
+          c.running === "second" ? Math.max(0, c.remainingMs.second - elapsed) : c.remainingMs.second,
+      },
+    };
+    // clockTick: ép tính lại mỗi nhịp; snapshot: cập nhật khi có dữ liệu mới (clockRecvAt là ref).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snapshot, clockTick]);
 
   // Tự lưu bàn cờ vào IndexedDB mỗi khi trạng thái đổi (để mở lại / mời lại sau).
   useEffect(() => {
@@ -199,6 +246,7 @@ export function useRoom(
   return {
     connected,
     snapshot,
+    liveClock,
     messages,
     notices,
     result,

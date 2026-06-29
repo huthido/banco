@@ -55,5 +55,12 @@ export interface ServerToClientEvents {
   "reaction:burst": (r: { id: string; emoji: string; name: string }) => void;
   /** Tin nhắn bong bóng trên bàn cờ — kèm phe để định vị. */
   "board:message": (m: { side: Side; name: string; text: string; at: number }) => void;
+  /** Đồng bộ đồng hồ nhẹ định kỳ (để người xem không bị lệch khi một lượt kéo dài). */
+  "clock:sync": (c: {
+    roomId: string;
+    remainingMs: { first: number; second: number };
+    running: Side | null;
+    serverNow: number;
+  }) => void;
   error: (err: { code: string; message: string }) => void;
 }
