@@ -5,7 +5,7 @@ import { REACTIONS } from "@/func";
 /** Thanh nút thả cảm xúc — hiển thị cho cả người chơi và người xem. */
 export function ReactionBar({ onReact }: { onReact: (emoji: string) => void }) {
   return (
-    <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+    <div className="flex flex-wrap items-center justify-center gap-2">
       {REACTIONS.map((emoji) => (
         <button
           key={emoji}

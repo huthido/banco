@@ -91,7 +91,7 @@ export function RoomClient({
   return (
     // h-dvh + overflow-hidden: trên mobile bàn cờ luôn hiện phía trên, vùng nội dung
     // phía dưới scroll riêng (không cuộn cả trang); desktop giữ bố cục 2 cột như cũ.
-    <main className="mx-auto flex h-dvh max-w-6xl flex-col overflow-hidden px-4 py-3">
+    <main className="mx-auto flex h-dvh max-w-6xl flex-col overflow-hidden px-2 py-3 sm:px-4">
       <div className="mb-2 flex items-center justify-between pr-12">
         <Link
           href="/"
@@ -103,8 +103,8 @@ export function RoomClient({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-8">
-        {/* Bàn cờ + điều khiển — luôn hiện (mobile: chiếm phần trên) */}
-        <div className="flex w-full min-h-0 flex-[1.35] flex-col items-center lg:flex-1 lg:overflow-auto lg:py-2">
+        {/* Bàn cờ + điều khiển — luôn hiện (mobile: chiếm phần lớn màn hình) */}
+        <div className="flex w-full min-h-0 flex-[2.5] flex-col items-center lg:flex-1 lg:overflow-auto lg:py-2">
           <div className="flex w-full min-h-0 flex-1 flex-col items-center lg:m-auto lg:flex-none">
             {/* Đồng hồ cờ — chỉ hiện khi bàn bật giới hạn thời gian */}
             {room.liveClock && (
@@ -200,9 +200,6 @@ export function RoomClient({
             {/* Tin nhắn nhanh hiện trên bàn — chỉ người chơi */}
             {snapshot.you.role === "player" && <BoardSay onSend={room.sendBoardMessage} />}
 
-            {/* Thả cảm xúc — cả người chơi và người xem đều dùng được */}
-            <ReactionBar onReact={room.sendReaction} />
-
             {!youCanPlay && snapshot.status === "playing" && snapshot.you.role === "player" && (
               <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Đang chờ đối thủ đi…</p>
             )}
@@ -243,6 +240,8 @@ export function RoomClient({
 
         {/* Vùng nội dung phía dưới — mobile: scroll riêng; desktop: sidebar cột phải */}
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto lg:h-full lg:w-80 lg:shrink-0 lg:pr-1">
+          {/* Thả cảm xúc — cả người chơi và người xem đều dùng được */}
+          <ReactionBar onReact={room.sendReaction} />
           <RoomSidebar snapshot={snapshot} meta={meta} inviteToken={inviteToken} />
           <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
             <MoveHistory moves={snapshot.moveHistory} />

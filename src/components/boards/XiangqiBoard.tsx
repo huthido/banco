@@ -64,22 +64,19 @@ export function XiangqiBoard({
       >
         {/* Lớp nền: sông + đường chéo 2 cung — vẽ theo toạ độ gốc (không bị flip). */}
         <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
-          {/* Sông: vùng giữa giao điểm hàng 4 và 5 (45%–55% chiều cao) */}
+          {/* Sông: vùng giữa giao điểm hàng 4 và 5 (45%–55% chiều cao), chỉ đổi màu */}
           <div
-            className="absolute left-0 right-0 flex items-center justify-center bg-black/10 dark:bg-black/30"
-            style={{ top: "45%", height: "10%", fontSize: "min(4vw, 15px)" }}
-          >
-            <span className="font-semibold tracking-[0.35em] text-boardline/50 dark:text-amber-100/40">
-              楚河 漢界
-            </span>
-          </div>
+            className="absolute left-0 right-0 bg-black/15 dark:bg-black/35"
+            style={{ top: "45%", height: "10%" }}
+          />
+          {/* Quân đặt ở giao điểm (x+0.5, y+0.5) trong toạ độ ô -> SVG vẽ đúng giao điểm */}
           <svg viewBox="0 0 9 10" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
-            {/* Cung trên (Đen, y 0..2) */}
-            <line x1={3} y1={0} x2={5} y2={2} className="stroke-boardline/60 dark:stroke-amber-100/25" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
-            <line x1={5} y1={0} x2={3} y2={2} className="stroke-boardline/60 dark:stroke-amber-100/25" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
-            {/* Cung dưới (Đỏ, y 7..9) */}
-            <line x1={3} y1={9} x2={5} y2={7} className="stroke-boardline/60 dark:stroke-amber-100/25" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
-            <line x1={5} y1={9} x2={3} y2={7} className="stroke-boardline/60 dark:stroke-amber-100/25" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+            {/* Cung trên (Đen, giao điểm y 0..2) */}
+            <line x1={3.5} y1={0.5} x2={5.5} y2={2.5} className="stroke-boardline/60 dark:stroke-amber-100/25" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+            <line x1={5.5} y1={0.5} x2={3.5} y2={2.5} className="stroke-boardline/60 dark:stroke-amber-100/25" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+            {/* Cung dưới (Đỏ, giao điểm y 7..9) */}
+            <line x1={3.5} y1={9.5} x2={5.5} y2={7.5} className="stroke-boardline/60 dark:stroke-amber-100/25" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+            <line x1={5.5} y1={9.5} x2={3.5} y2={7.5} className="stroke-boardline/60 dark:stroke-amber-100/25" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
           </svg>
         </div>
         {ys.map((y) =>
