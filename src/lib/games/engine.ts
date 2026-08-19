@@ -23,4 +23,11 @@ export interface GameEngine<S = unknown, M = unknown> {
 
   /** Nhãn ngắn mô tả nước đi để hiển thị lịch sử. */
   describeMove(move: M, side: Side): string;
+
+  /**
+   * (Tuỳ chọn) Phe đang bị chiếu — chỉ loại cờ có khái niệm chiếu implement
+   * (vd cờ tướng). Trả null nếu không có ai bị chiếu hoặc game không có khái niệm này.
+   * Server đưa vào snapshot để UI hiện cảnh báo mà không cần biết luật.
+   */
+  getCheck?(state: S): Side | null;
 }

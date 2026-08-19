@@ -72,7 +72,7 @@ export function ChessBoard({
   const last = state.lastMove;
 
   return (
-    <div className="w-[min(96vw,480px)] rounded-lg bg-[#7a5230] p-2 shadow-md">
+    <div className="w-[min(100%,480px)] rounded-lg bg-[#7a5230] p-2 shadow-md">
       <div
         className="grid overflow-hidden rounded"
         style={{

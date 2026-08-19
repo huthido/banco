@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRoom } from "@/lib/client/useRoom";
 import { NameDialog } from "./NameDialog";
@@ -23,7 +23,7 @@ import type { ChessState } from "@/lib/games/chess";
 import type { XiangqiState } from "@/lib/games/xiangqi";
 import type { CheckersState } from "@/lib/games/checkers";
 import type { GoState } from "@/lib/games/go";
-import { formatResult, isMyTurn } from "@/func";
+import { formatResult, isMyTurn, sideLabel } from "@/func";
 
 export function RoomClient({
   roomId,
@@ -37,6 +37,28 @@ export function RoomClient({
   const [name, setName] = useState("");
   const room = useRoom(roomId, name, inviteToken, wantPlay);
   const { snapshot, result, notices, joinError } = room;
+
+  // Đo vùng bàn cờ để co bàn cờ vừa chiều cao (mobile: bàn luôn hiện, phần dưới scroll).
+  const boardAreaRef = useRef<HTMLDivElement>(null);
+  const [boardWidth, setBoardWidth] = useState<number | null>(null);
+  useEffect(() => {
+    const el = boardAreaRef.current;
+    if (!el || !snapshot) return;
+    const meta = GAME_CATALOG.find((g) => g.type === snapshot.gameType)!;
+    const aspect = meta.boardCols / meta.boardRows;
+    const update = () => {
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      if (w > 0 && h > 0) {
+        const pad = 24; // padding nội bộ của board (p-2/p-3)
+        setBoardWidth(Math.max(0, Math.min(w, (h - pad) * aspect + pad)));
+      } else setBoardWidth(null);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [snapshot?.gameType, snapshot?.status, snapshot?.you.side]);
 
   if (!name) return <NameDialog onSubmit={setName} />;
 
@@ -67,7 +89,9 @@ export function RoomClient({
     isMyTurn(snapshot.turn, snapshot.you.side);
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-col px-4 py-3 lg:h-screen lg:overflow-hidden">
+    // h-dvh + overflow-hidden: trên mobile bàn cờ luôn hiện phía trên, vùng nội dung
+    // phía dưới scroll riêng (không cuộn cả trang); desktop giữ bố cục 2 cột như cũ.
+    <main className="mx-auto flex h-dvh max-w-6xl flex-col overflow-hidden px-4 py-3">
       <div className="mb-2 flex items-center justify-between pr-12">
         <Link
           href="/"
@@ -78,14 +102,13 @@ export function RoomClient({
         <span className="truncate text-sm text-slate-400 dark:text-slate-500">Phòng: {roomId}</span>
       </div>
 
-      <div className="flex flex-col gap-8 lg:min-h-0 lg:flex-1 lg:flex-row">
-        {/* Bàn cờ + điều khiển. Dùng m-auto (không align-center) để khi nội dung
-            cao hơn khung vẫn cuộn lên xem được phần trên, không bị cắt. */}
-        <div className="flex-1 lg:flex lg:overflow-auto lg:py-2">
-          <div className="flex flex-col items-center lg:m-auto">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-8">
+        {/* Bàn cờ + điều khiển — luôn hiện (mobile: chiếm phần trên) */}
+        <div className="flex w-full min-h-0 flex-[1.35] flex-col items-center lg:flex-1 lg:overflow-auto lg:py-2">
+          <div className="flex w-full min-h-0 flex-1 flex-col items-center lg:m-auto lg:flex-none">
             {/* Đồng hồ cờ — chỉ hiện khi bàn bật giới hạn thời gian */}
             {room.liveClock && (
-              <div className="mb-3 flex items-center gap-3">
+              <div className="mb-2 flex items-center gap-3">
                 <GameClock
                   label={meta.sides[0]}
                   name={snapshot.players.first?.name}
@@ -101,50 +124,77 @@ export function RoomClient({
               </div>
             )}
 
-            {/* Bàn cờ + lớp phủ emoji bay lên */}
-            <div className="relative">
-              {snapshot.gameType === "gomoku" && (
-                <GomokuBoard
-                  state={snapshot.state as GomokuState}
-                  canPlay={youCanPlay}
-                  onPlace={(x, y) => room.makeMove({ x, y })}
-                />
-              )}
-              {snapshot.gameType === "chess" && (
-                <ChessBoard
-                  state={snapshot.state as ChessState}
-                  canPlay={youCanPlay}
-                  orientation={snapshot.you.side}
-                  onMove={(from, to) => room.makeMove({ from, to })}
-                />
-              )}
-              {snapshot.gameType === "xiangqi" && (
-                <XiangqiBoard
-                  state={snapshot.state as XiangqiState}
-                  canPlay={youCanPlay}
-                  mySide={snapshot.you.side}
-                  onMove={(from, to) =>
-                    room.makeMove({ fx: from.x, fy: from.y, tx: to.x, ty: to.y })
-                  }
-                />
-              )}
-              {snapshot.gameType === "checkers" && (
-                <CheckersBoard
-                  state={snapshot.state as CheckersState}
-                  canPlay={youCanPlay}
-                  mySide={snapshot.you.side}
-                  onMove={(move) => room.makeMove(move)}
-                />
-              )}
-              {snapshot.gameType === "go" && (
-                <GoBoard
-                  state={snapshot.state as GoState}
-                  canPlay={youCanPlay}
-                  onMove={(move) => room.makeMove(move)}
-                />
-              )}
-              <ReactionOverlay reactions={room.reactions} />
-              <BoardMessageOverlay messages={room.boardMessages} />
+            {/* Vùng bàn cờ: co theo chiều cao khả dụng (mobile) / kích thước tự nhiên (desktop) */}
+            <div ref={boardAreaRef} className="flex min-h-0 w-full flex-1 items-center justify-center">
+              <div
+                className="relative flex w-full justify-center"
+                style={boardWidth !== null ? { width: boardWidth } : undefined}
+              >
+                {snapshot.gameType === "gomoku" && (
+                  <GomokuBoard
+                    state={snapshot.state as GomokuState}
+                    canPlay={youCanPlay}
+                    onPlace={(x, y) => room.makeMove({ x, y })}
+                  />
+                )}
+                {snapshot.gameType === "chess" && (
+                  <ChessBoard
+                    state={snapshot.state as ChessState}
+                    canPlay={youCanPlay}
+                    orientation={snapshot.you.side}
+                    onMove={(from, to) => room.makeMove({ from, to })}
+                  />
+                )}
+                {snapshot.gameType === "xiangqi" && (
+                  <XiangqiBoard
+                    state={snapshot.state as XiangqiState}
+                    canPlay={youCanPlay}
+                    mySide={snapshot.you.side}
+                    onMove={(from, to) =>
+                      room.makeMove({ fx: from.x, fy: from.y, tx: to.x, ty: to.y })
+                    }
+                  />
+                )}
+                {snapshot.gameType === "checkers" && (
+                  <CheckersBoard
+                    state={snapshot.state as CheckersState}
+                    canPlay={youCanPlay}
+                    mySide={snapshot.you.side}
+                    onMove={(move) => room.makeMove(move)}
+                  />
+                )}
+                {snapshot.gameType === "go" && (
+                  <GoBoard
+                    state={snapshot.state as GoState}
+                    canPlay={youCanPlay}
+                    onMove={(move) => room.makeMove(move)}
+                  />
+                )}
+                <ReactionOverlay reactions={room.reactions} />
+                <BoardMessageOverlay messages={room.boardMessages} />
+
+                {/* Cảnh báo Chiếu (loại cờ có khái niệm chiếu — vd cờ tướng) */}
+                {snapshot.check && snapshot.status === "playing" && (
+                  <div className="check-alert pointer-events-none absolute left-1/2 top-3 z-30 -translate-x-1/2 whitespace-nowrap rounded-full bg-red-600 px-4 py-1.5 text-sm font-bold text-white shadow-lg ring-2 ring-red-300 dark:ring-red-500/60">
+                    ⚡ Chiếu!{" "}
+                    <span className="font-medium opacity-90">
+                      ({sideLabel(snapshot.check, meta.sides)})
+                    </span>
+                  </div>
+                )}
+
+                {/* Chiếu bí -> chiến thắng (cờ tướng) */}
+                {snapshot.gameType === "xiangqi" && result?.reason === "chiếu bí" && (
+                  <div className="checkmate-pop pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
+                    <div className="rounded-2xl bg-red-600/95 px-8 py-5 text-center text-white shadow-2xl">
+                      <div className="text-3xl font-extrabold">🏆 Chiếu bí!</div>
+                      <div className="mt-1 text-lg font-semibold">
+                        {formatResult(result, meta.sides)}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Tin nhắn nhanh hiện trên bàn — chỉ người chơi */}
@@ -154,12 +204,12 @@ export function RoomClient({
             <ReactionBar onReact={room.sendReaction} />
 
             {!youCanPlay && snapshot.status === "playing" && snapshot.you.role === "player" && (
-              <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Đang chờ đối thủ đi…</p>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Đang chờ đối thủ đi…</p>
             )}
 
             {/* Nút điều khiển cho người chơi */}
             {snapshot.you.role === "player" && (
-              <div className="mt-4 flex gap-3">
+              <div className="mt-3 flex gap-3">
                 {snapshot.status === "playing" && (
                   <button
                     onClick={room.resign}
@@ -184,15 +234,15 @@ export function RoomClient({
 
             {/* Kết quả */}
             {result && (
-              <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-6 py-3 text-center font-semibold text-amber-800 dark:border-amber-500/60 dark:bg-amber-950 dark:text-amber-300">
+              <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50 px-6 py-3 text-center font-semibold text-amber-800 dark:border-amber-500/60 dark:bg-amber-950 dark:text-amber-300">
                 🏁 {formatResult(result, meta.sides)}
               </div>
             )}
           </div>
         </div>
 
-        {/* Sidebar — chỉ vùng này cuộn ở màn lớn */}
-        <div className="space-y-5 lg:h-full lg:w-80 lg:shrink-0 lg:overflow-y-auto lg:pr-1">
+        {/* Vùng nội dung phía dưới — mobile: scroll riêng; desktop: sidebar cột phải */}
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto lg:h-full lg:w-80 lg:shrink-0 lg:pr-1">
           <RoomSidebar snapshot={snapshot} meta={meta} inviteToken={inviteToken} />
           <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
             <MoveHistory moves={snapshot.moveHistory} />

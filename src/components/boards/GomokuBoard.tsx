@@ -15,8 +15,8 @@ export function GomokuBoard({
   const { grid, cols, rows, last } = state;
 
   return (
-    // Container vuông co theo viewport: tối đa 480px, không tràn trên mobile.
-    <div className="w-[min(96vw,480px)] rounded-lg bg-board p-2 shadow-md sm:p-3 dark:bg-[#5a3f20]">
+    // Container vuông co theo viewport: rộng hết vùng chứa (tối đa 480px), không tràn trên mobile.
+    <div className="w-[min(100%,480px)] rounded-lg bg-board p-2 shadow-md sm:p-3 dark:bg-[#5a3f20]">
       <div
         className="grid w-full"
         style={{

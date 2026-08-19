@@ -52,9 +52,9 @@ export function XiangqiBoard({
   const last = state.last;
 
   return (
-    <div className="w-[min(96vw,440px)] rounded-lg bg-board p-2 shadow-md sm:p-3 dark:bg-[#5a3f20]">
+    <div className="w-[min(100%,440px)] rounded-lg bg-board p-2 shadow-md sm:p-3 dark:bg-[#5a3f20]">
       <div
-        className="grid w-full"
+        className="relative grid w-full"
         style={{
           gridTemplateColumns: `repeat(${XIANGQI_COLS}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${XIANGQI_ROWS}, minmax(0, 1fr))`,
@@ -62,6 +62,26 @@ export function XiangqiBoard({
           fontSize: "min(6.5vw, 28px)",
         }}
       >
+        {/* Lớp nền: sông + đường chéo 2 cung — vẽ theo toạ độ gốc (không bị flip). */}
+        <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
+          {/* Sông: vùng giữa giao điểm hàng 4 và 5 (45%–55% chiều cao) */}
+          <div
+            className="absolute left-0 right-0 flex items-center justify-center bg-black/10 dark:bg-black/30"
+            style={{ top: "45%", height: "10%", fontSize: "min(4vw, 15px)" }}
+          >
+            <span className="font-semibold tracking-[0.35em] text-boardline/50 dark:text-amber-100/40">
+              楚河 漢界
+            </span>
+          </div>
+          <svg viewBox="0 0 9 10" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
+            {/* Cung trên (Đen, y 0..2) */}
+            <line x1={3} y1={0} x2={5} y2={2} className="stroke-boardline/60 dark:stroke-amber-100/25" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+            <line x1={5} y1={0} x2={3} y2={2} className="stroke-boardline/60 dark:stroke-amber-100/25" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+            {/* Cung dưới (Đỏ, y 7..9) */}
+            <line x1={3} y1={9} x2={5} y2={7} className="stroke-boardline/60 dark:stroke-amber-100/25" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+            <line x1={5} y1={9} x2={3} y2={7} className="stroke-boardline/60 dark:stroke-amber-100/25" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+          </svg>
+        </div>
         {ys.map((y) =>
           xs.map((x) => {
             const c = state.grid[coordToIndex(x, y, XIANGQI_COLS)];

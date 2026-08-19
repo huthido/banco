@@ -1,6 +1,6 @@
 import type { GameEngine } from "./engine";
 import type { GameMeta, GameResult, Side } from "@/types/game";
-import { coordToIndex, inBounds } from "@/func";
+import { coordToIndex, inBounds, otherSide } from "@/func";
 
 // Toạ độ: x 0..8 (cột), y 0..9 (hàng). y=0 phía trên (Đen/second), y=9 phía dưới (Đỏ/first).
 // Đỏ đi trước. Sông giữa y=4 và y=5. Cung: cột 3..5; Đỏ y7..9, Đen y0..2.
@@ -23,7 +23,8 @@ export type XiangqiState = {
   grid: XiangqiCell[];
   cols: number;
   rows: number;
-  last: { fx: number; fy: number; tx: number; ty: number } | null;
+  /** Nước vừa đi để highlight; kèm `side` (bên vừa đi) để phát hiện chiếu bí. */
+  last: { fx: number; fy: number; tx: number; ty: number; side: Side } | null;
 };
 
 export type XiangqiMove = { fx: number; fy: number; tx: number; ty: number };
@@ -159,6 +160,52 @@ function isXiangqiMove(v: unknown): v is XiangqiMove {
   );
 }
 
+/**
+ * Nước đi hợp lệ theo LUẬT CHUẨN: đi đúng hình học, không ăn Tướng đối phương,
+ * và sau nước đi Tướng của mình KHÔNG được bị chiếu (bao gồm không để hai Tướng
+ * đối mặt — xem `xiangqiInCheck`). Không xét lượt.
+ */
+function validMove(g: XiangqiCell[], m: XiangqiMove, side: Side): boolean {
+  if (m.fx === m.tx && m.fy === m.ty) return false;
+  if (!geometryOk(g, m, side)) return false;
+  const dest = at(g, m.tx, m.ty);
+  if (dest && dest.type === "general") return false; // luật chuẩn: không được ăn Tướng
+  return !xiangqiInCheck(applyTo(g, m), side);
+}
+
+/**
+ * Tướng của `side` có đang bị chiếu không (luật chuẩn):
+ * 1) Tồn tại quân đối phương (không phải Tướng) có nước hình học ăn được Tướng, hoặc
+ * 2) Hai Tướng đối mặt trên cùng cột không có quân chắn (chiếu trực diện).
+ */
+export function xiangqiInCheck(g: XiangqiCell[], side: Side): boolean {
+  const gen = findGeneral(g, side);
+  if (!gen) return false; // Tướng đã bị bắt (state cũ) — không còn là chiếu
+  if (generalsFacing(g)) return true; // Tướng đối phương đối mặt
+  const attacker = otherSide(side);
+  for (let fy = 0; fy < XIANGQI_ROWS; fy++)
+    for (let fx = 0; fx < XIANGQI_COLS; fx++) {
+      const p = at(g, fx, fy);
+      if (!p || p.side !== attacker || p.type === "general") continue;
+      if (geometryOk(g, { fx, fy, tx: gen.x, ty: gen.y }, attacker)) return true;
+    }
+  return false;
+}
+
+/** Bên `side` còn nước đi hợp lệ nào không (validMove đã đảm bảo không để mình bị chiếu). */
+function hasEscape(g: XiangqiCell[], side: Side): boolean {
+  for (let fy = 0; fy < XIANGQI_ROWS; fy++)
+    for (let fx = 0; fx < XIANGQI_COLS; fx++) {
+      const p = at(g, fx, fy);
+      if (!p || p.side !== side) continue;
+      for (let ty = 0; ty < XIANGQI_ROWS; ty++)
+        for (let tx = 0; tx < XIANGQI_COLS; tx++) {
+          if (validMove(g, { fx, fy, tx, ty }, side)) return true;
+        }
+    }
+  return false;
+}
+
 export const xiangqiEngine: GameEngine<XiangqiState, XiangqiMove> = {
   meta,
 
@@ -168,21 +215,34 @@ export const xiangqiEngine: GameEngine<XiangqiState, XiangqiMove> = {
 
   validateMove(state, move, side): boolean {
     if (!isXiangqiMove(move)) return false;
-    if (move.fx === move.tx && move.fy === move.ty) return false;
-    if (!geometryOk(state.grid, move, side)) return false;
-    // Sau khi đi, hai Tướng không được đối mặt.
-    return !generalsFacing(applyTo(state.grid, move));
+    return validMove(state.grid, move, side);
   },
 
-  applyMove(state, move): XiangqiState {
-    return { ...state, grid: applyTo(state.grid, move), last: { ...move } };
+  applyMove(state, move, side): XiangqiState {
+    return { ...state, grid: applyTo(state.grid, move), last: { ...move, side } };
   },
 
   checkResult(state): GameResult | null {
-    const red = findGeneral(state.grid, "first");
-    const black = findGeneral(state.grid, "second");
-    if (!black) return { winner: "first", reason: "bắt được Tướng" };
-    if (!red) return { winner: "second", reason: "bắt được Tướng" };
+    // Phòng thủ với state cũ (biến thể bắt-Tướng): Tướng biến mất thì coi như thắng.
+    if (!findGeneral(state.grid, "first")) return { winner: "second", reason: "bắt được Tướng" };
+    if (!findGeneral(state.grid, "second")) return { winner: "first", reason: "bắt được Tướng" };
+    // Luật chuẩn: bên sắp đi không còn nước hợp lệ nào -> thua. Nếu đang bị chiếu
+    // thì là chiếu bí; không bị chiếu thì là hết nước đi.
+    const mover = state.last?.side;
+    if (!mover) return null;
+    const target = otherSide(mover);
+    if (!hasEscape(state.grid, target)) {
+      return {
+        winner: mover,
+        reason: xiangqiInCheck(state.grid, target) ? "chiếu bí" : "đối thủ hết nước đi",
+      };
+    }
+    return null;
+  },
+
+  getCheck(state): Side | null {
+    if (xiangqiInCheck(state.grid, "first")) return "first";
+    if (xiangqiInCheck(state.grid, "second")) return "second";
     return null;
   },
 

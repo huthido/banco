@@ -16,7 +16,7 @@ export function GoBoard({
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="w-[min(96vw,540px)] rounded-lg bg-board p-2 shadow-md sm:p-3 dark:bg-[#5a3f20]">
+      <div className="w-[min(100%,540px)] rounded-lg bg-board p-2 shadow-md sm:p-3 dark:bg-[#5a3f20]">
         <div
           className="grid w-full"
           style={{

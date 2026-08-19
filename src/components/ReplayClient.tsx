@@ -76,7 +76,7 @@ export function ReplayClient({ recordId }: { recordId: string }) {
       </div>
 
       <div className="flex flex-col gap-8 lg:flex-row">
-        <div className="flex flex-1 flex-col items-center">
+        <div className="flex w-full flex-col items-center lg:flex-1">
           {rec.gameType === "gomoku" && (
             <GomokuBoard state={states[index] as GomokuState} canPlay={false} onPlace={() => {}} />
           )}

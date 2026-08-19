@@ -9,7 +9,8 @@ Tạo bàn cờ, mời đối thủ và người xem chỉ bằng một đườn
   highlight nước cuối & ô bị chiếu, xoay bàn theo phe, phong tốt tự thành Hậu, phát hiện
   chiếu hết/hết cờ/hòa.
 - ✅ **Cờ tướng (Xiangqi)** 9×10 — đủ 7 loại quân (cung, sông, cản Mã, mắt Tượng, ngòi Pháo),
-  luật Tướng đối mặt, thắng = bắt Tướng.
+  **luật chuẩn** (cấm để Tướng mình bị chiếu, luật Tướng đối mặt), **phát hiện chiếu (cảnh báo) &
+  chiếu bí (thắng ngay)**, hết nước đi cũng thua.
 - ✅ **Cờ đam (Checkers)** 8×8 (luật Anh/Mỹ) — đi chéo, **ăn liên hoàn bắt buộc**, bắt buộc ăn
   khi có nước ăn, phong Hậu; thắng = đối thủ hết quân hoặc hết nước.
 - ✅ **Cờ vây (Go)** 19×19 — đặt quân, bắt nhóm hết khí, **cấm tự sát**, **luật ko**, bỏ lượt;
@@ -27,6 +28,9 @@ Tạo bàn cờ, mời đối thủ và người xem chỉ bằng một đườn
 - ✅ Vai trò tự động: 2 người chơi + nhiều người xem; chặn người xem đi quân.
 - ✅ Xin thua / đánh lại (hoán phe) / reconnect giữ ghế (qua `playerId` ở localStorage).
 - ✅ **Giao diện sáng/tối** — nút chuyển ở góc phải, nhớ lựa chọn + theo hệ thống, không nháy.
+- ✅ **Bố cục mobile cố định bàn cờ** — trên điện thoại, bàn cờ luôn hiện phía trên (tự co
+  vừa màn hình), nội dung phía dưới (người chơi, lịch sử nước, chat) cuộn riêng; áp dụng
+  cho mọi loại cờ.
 - ✅ **Lưu bàn cờ (IndexedDB)** — tự lưu ở trình duyệt; trang chủ có danh sách "Bàn cờ đã lưu"
   để **mở lại / mời lại / xoá**. Mở lại còn **tự khôi phục** ván trên server nếu server đã
   restart (in-memory) — gửi lại snapshot đã lưu để dựng lại đúng thế cờ.
@@ -38,8 +42,8 @@ Tạo bàn cờ, mời đối thủ và người xem chỉ bằng một đườn
   [`docs/ADDING_A_GAME.md`](docs/ADDING_A_GAME.md).
 
 > Ghi chú luật rút gọn: Cờ vây tính điểm theo vùng **không tự nhận diện quân chết** (người
-> chơi tự bắt hết trước khi bỏ lượt); Cờ tướng dùng biến thể **bắt-được-Tướng** (không tự
-> chặn nước để bị chiếu). Đủ dùng cho chơi giải trí.
+> chơi tự bắt hết trước khi bỏ lượt); Cờ tướng chơi theo **luật chuẩn** (không được để Tướng
+> mình bị chiếu; chiếu bí hoặc hết nước đi là thua). Đủ dùng cho chơi giải trí.
 
 ## Công nghệ
 

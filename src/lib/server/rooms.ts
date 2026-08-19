@@ -267,6 +267,8 @@ export function snapshotFor(room: Room, you: { role: Role; side: Side | null }):
     moveHistory: room.moveHistory,
     turn: room.turn,
     result: room.result,
+    // Phe đang bị chiếu (vd cờ tướng) — engine nào không có khái niệm này thì null.
+    check: getEngine(room.gameType).getCheck?.(room.state) ?? null,
     rematch: {
       first: room.rematchVotes.has("first"),
       second: room.rematchVotes.has("second"),

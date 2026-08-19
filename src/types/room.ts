@@ -70,6 +70,8 @@ export type RoomSnapshot = {
   moveHistory: Move[];
   turn: Side;
   result?: GameResult;
+  /** Phe đang bị chiếu (loại cờ có khái niệm chiếu — vd cờ tướng); null nếu không. */
+  check: Side | null;
   rematch: { first: boolean; second: boolean };
   /** Cấu hình thời gian của phòng. */
   timeControl: TimeControl;

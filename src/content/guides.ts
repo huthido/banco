@@ -80,9 +80,9 @@ export const GUIDES: Record<GameType, Guide> = {
 
   xiangqi: {
     type: "xiangqi",
-    tagline: "Bắt được Tướng đối phương",
+    tagline: "Chiếu bí Tướng đối phương",
     intro:
-      "Cờ tướng (Xiangqi) là cờ truyền thống Trung Hoa trên bàn 9×10, có “sông” chia đôi và “cung” cho mỗi bên. Quân đặt trên giao điểm. Đỏ đi trước. Mục tiêu là bắt được Tướng đối phương.",
+      "Cờ tướng (Xiangqi) là cờ truyền thống Trung Hoa trên bàn 9×10, có “sông” chia đôi và “cung” cho mỗi bên. Quân đặt trên giao điểm. Đỏ đi trước. Mục tiêu là chiếu bí Tướng đối phương.",
     howToPlay: [
       "Bên Đỏ đi trước, sau đó luân phiên mỗi lượt đi một quân.",
       "Bấm vào quân của bạn để xem các ô đi hợp lệ rồi bấm ô đích.",
@@ -92,6 +92,8 @@ export const GUIDES: Record<GameType, Guide> = {
       "Cung là vùng 3×3 có gạch chéo; Tướng và Sĩ không được ra khỏi cung.",
       "Sông nằm giữa bàn: Tượng không qua sông; Tốt qua sông mới được đi ngang.",
       "Hai Tướng không được “đối mặt” trực tiếp trên cùng một cột khi giữa không có quân nào.",
+      "Không được để Tướng của mình bị chiếu sau nước đi của mình.",
+      "Khi Tướng bị chiếu, màn hình hiện cảnh báo; bị chiếu bí (hết đường cứu Tướng) là thua, hết nước đi hợp lệ cũng thua.",
     ],
     pieces: [
       { symbol: "帥", name: "Tướng (Soái)", move: "Đi 1 ô thẳng (ngang/dọc), chỉ trong cung." },
@@ -102,7 +104,7 @@ export const GUIDES: Record<GameType, Guide> = {
       { symbol: "炮", name: "Pháo", move: "Đi như Xe khi không ăn; muốn ăn phải nhảy qua đúng 1 quân làm ngòi." },
       { symbol: "兵", name: "Tốt", move: "Tiến 1 ô; sau khi qua sông được tiến hoặc đi ngang 1 ô, không lùi." },
     ],
-    win: "Bắt được Tướng đối phương (hoặc đối phương hết đường cứu Tướng).",
+    win: "Chiếu bí Tướng đối phương (không còn nước cứu); bên hết nước đi hợp lệ cũng thua.",
     tips: [
       "Pháo mạnh ở đầu ván khi bàn còn nhiều quân làm ngòi.",
       "Tận dụng luật Tướng đối mặt để ghim hoặc chiếu bí.",
