@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRoom } from "@/lib/client/useRoom";
 import { NameDialog } from "./NameDialog";
@@ -41,28 +41,6 @@ export function RoomClient({
   // Nước gợi ý từ nút "💡 Gợi ý" (chơi với máy) — reset mỗi khi thế cờ đổi.
   const [hint, setHint] = useState<unknown>(null);
   useEffect(() => setHint(null), [snapshot]);
-
-  // Đo vùng bàn cờ để co bàn cờ vừa chiều cao (mobile: bàn luôn hiện, phần dưới scroll).
-  const boardAreaRef = useRef<HTMLDivElement>(null);
-  const [boardWidth, setBoardWidth] = useState<number | null>(null);
-  useEffect(() => {
-    const el = boardAreaRef.current;
-    if (!el || !snapshot) return;
-    const meta = GAME_CATALOG.find((g) => g.type === snapshot.gameType)!;
-    const aspect = meta.boardCols / meta.boardRows;
-    const update = () => {
-      const w = el.clientWidth;
-      const h = el.clientHeight;
-      if (w > 0 && h > 0) {
-        const pad = 24; // padding nội bộ của board (p-2/p-3)
-        setBoardWidth(Math.max(0, Math.min(w, (h - pad) * aspect + pad)));
-      } else setBoardWidth(null);
-    };
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [snapshot?.gameType, snapshot?.status, snapshot?.you.side]);
 
   if (!name) return <NameDialog onSubmit={setName} />;
 
@@ -135,10 +113,9 @@ export function RoomClient({
             )}
 
             {/* Vùng bàn cờ: co theo chiều cao khả dụng (mobile) / kích thước tự nhiên (desktop) */}
-            <div ref={boardAreaRef} className="flex min-h-0 w-full flex-1 items-center justify-center">
+            <div className="flex min-h-0 w-full flex-1 items-center justify-center">
               <div
                 className="relative flex w-full justify-center"
-                style={boardWidth !== null ? { width: boardWidth } : undefined}
               >
                 {snapshot.gameType === "gomoku" && (
                   <GomokuBoard

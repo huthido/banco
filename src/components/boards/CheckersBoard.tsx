@@ -70,7 +70,7 @@ export function CheckersBoard({
   const lastPath = state.last?.path ?? [];
 
   return (
-    <div className="w-[min(100%,480px)] rounded-lg bg-[#7a5230] p-2 shadow-md">
+    <div className="w-[min(100%,480px)] touch-manipulation select-none rounded-lg bg-[#7a5230] p-2 shadow-md">
       <div
         className="grid overflow-hidden rounded"
         style={{
@@ -92,7 +92,7 @@ export function CheckersBoard({
                 disabled={!canPlay}
                 onClick={() => onCell(x, y)}
                 aria-label={`${x},${y}`}
-                className="relative flex items-center justify-center"
+                className="relative flex items-center justify-center active:brightness-90 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-cyan-500"
                 style={{ backgroundColor: dark ? "#a9744a" : "#e9c89b" }}
               >
                 {isLast && <span className="absolute inset-0 bg-yellow-300/35" />}

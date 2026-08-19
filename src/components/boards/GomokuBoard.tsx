@@ -19,7 +19,7 @@ export function GomokuBoard({
 
   return (
     // Container vuông co theo viewport: rộng hết vùng chứa (tối đa 480px), không tràn trên mobile.
-    <div className="w-[min(100%,480px)] rounded-lg bg-board p-2 shadow-md sm:p-3 dark:bg-[#5a3f20]">
+    <div className="w-[min(100%,480px)] touch-manipulation select-none rounded-lg bg-board p-2 shadow-md sm:p-3 dark:bg-[#5a3f20]">
       <div
         className="grid w-full"
         style={{
@@ -37,7 +37,7 @@ export function GomokuBoard({
                 key={`${x}-${y}`}
                 disabled={!canPlay || cell !== null}
                 onClick={() => onPlace(x, y)}
-                className="relative flex items-center justify-center"
+                className="relative flex items-center justify-center active:brightness-90 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-cyan-500"
                 aria-label={`Ô ${x + 1},${y + 1}`}
               >
                 {/* Đường kẻ bàn cờ */}

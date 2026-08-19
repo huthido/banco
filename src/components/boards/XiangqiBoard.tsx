@@ -55,7 +55,7 @@ export function XiangqiBoard({
   const last = state.last;
 
   return (
-    <div className="w-[min(100%,440px)] rounded-lg bg-board p-2 shadow-md sm:p-3 dark:bg-[#5a3f20]">
+    <div className="w-[min(100%,440px)] touch-manipulation select-none rounded-lg bg-board p-2 shadow-md sm:p-3 dark:bg-[#5a3f20]">
       <div
         className="relative grid w-full"
         style={{
@@ -94,7 +94,7 @@ export function XiangqiBoard({
                 disabled={!canPlay}
                 onClick={() => onCell(x, y)}
                 aria-label={`${x},${y}`}
-                className="relative flex items-center justify-center"
+                className="relative flex items-center justify-center active:brightness-90 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-cyan-500"
               >
                 {/* Lưới */}
                 <span className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-boardline/60 dark:bg-amber-100/25" />
