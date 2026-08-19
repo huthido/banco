@@ -75,6 +75,10 @@ export function useRoom(
   const pushNotice = useCallback((text: string, kind: Notice["kind"]) => {
     const id = `n${noticeSeq.current++}`;
     setNotices((prev) => [...prev.slice(-4), { id, text, kind }]);
+    // Tự ẩn sau vài giây — tránh che phủ vùng click (nhất là trên mobile).
+    setTimeout(() => {
+      setNotices((prev) => prev.filter((n) => n.id !== id));
+    }, 4000);
   }, []);
 
   useEffect(() => {

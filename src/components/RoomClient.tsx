@@ -102,6 +102,12 @@ export function RoomClient({
         <span className="truncate text-sm text-slate-400 dark:text-slate-500">Phòng: {roomId}</span>
       </div>
 
+      {!room.connected && (
+        <div className="mb-2 rounded-lg bg-amber-100 px-3 py-1.5 text-center text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+          ⚠️ Mất kết nối — đang thử kết nối lại…
+        </div>
+      )}
+
       <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-8">
         {/* Bàn cờ + điều khiển — luôn hiện (mobile: chiếm phần lớn màn hình) */}
         <div className="flex w-full min-h-0 flex-[2.5] flex-col items-center lg:flex-1 lg:overflow-auto lg:py-2">
@@ -252,8 +258,8 @@ export function RoomClient({
         </div>
       </div>
 
-      {/* Thông báo nổi */}
-      <div className="fixed bottom-4 right-4 space-y-2">
+      {/* Thông báo nổi — chỉ hiển thị, không chặn click */}
+      <div className="pointer-events-none fixed bottom-4 right-4 space-y-2">
         {notices.slice(-3).map((n) => (
           <div
             key={n.id}
