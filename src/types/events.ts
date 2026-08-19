@@ -35,6 +35,11 @@ export interface ClientToServerEvents {
   "reaction:send": (payload: { roomId: string; emoji: string }) => void;
   /** Tin nhắn nhanh của người chơi, hiện thành bong bóng trên bàn cờ. */
   "board:say": (payload: { roomId: string; text: string }) => void;
+  /** Gợi ý nước đi (phòng chơi với máy) — kết quả trả qua ack. */
+  "hint:request": (
+    payload: { roomId: string },
+    ack?: (res: { ok: boolean; move?: unknown; error?: string }) => void
+  ) => void;
 }
 
 export type ChatMessage = {

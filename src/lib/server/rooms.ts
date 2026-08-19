@@ -4,6 +4,7 @@ import { genRoomId, genToken, otherSide } from "@/func";
 import { getEngine, isGameSupported } from "@/lib/games";
 import type { RoomRestore } from "@/types/events";
 import { initClock, startTurn, applyMove as clockApplyMove, stop as clockStop, liveRemaining } from "./clock";
+import { BOT_NAME, BOT_LEVELS } from "@/lib/bots/types";
 
 /**
  * Kho phòng in-memory. Lưu trên globalThis để API route của Next (dev mode chạy
@@ -25,12 +26,13 @@ const rooms = store.rooms;
 const ROOM_TTL_MS = 1000 * 60 * 60 * 6; // 6 giờ
 const EMPTY_GRACE_MS = 1000 * 60 * 10; // phòng trống quá 10 phút thì dọn
 
-/** Tạo phòng mới, người tạo sẽ là phe `hostSide`. Trả về room. */
+/** Tạo phòng mới, người tạo sẽ là phe `hostSide`. `botLevel` (0-4) bật chế độ chơi với máy. */
 export function createRoom(
   gameType: GameType,
   hostSide: Side = "first",
   isPublic = false,
-  timeControl: TimeControl = { mode: "unlimited" }
+  timeControl: TimeControl = { mode: "unlimited" },
+  botLevel?: number
 ): Room {
   const engine = getEngine(gameType);
   let id = genRoomId();
@@ -52,6 +54,17 @@ export function createRoom(
     timeControl,
     clock: initClock(timeControl),
   };
+  // Chơi với máy: bot ngồi phe đối diện host, luôn "kết nối".
+  if (botLevel !== undefined) {
+    const botSide: Side = hostSide === "first" ? "second" : "first";
+    room.players[botSide] = {
+      id: `bot:${genToken()}`,
+      name: `${BOT_NAME} (${BOT_LEVELS[botLevel]?.name ?? botLevel})`,
+      socketId: null,
+      connected: true,
+    };
+    room.bot = { level: botLevel, side: botSide };
+  }
   rooms.set(id, room);
   // Lưu host muốn ngồi phe nào (xử lý khi họ join qua socket).
   store.hostSideHint.set(id, hostSide);
@@ -236,6 +249,11 @@ export function resetForRematch(room: Room) {
   const { first, second } = room.players;
   room.players.first = second;
   room.players.second = first;
+  // Bot đổi phe theo slot mới (slot bot có id bắt đầu "bot:").
+  if (room.bot) {
+    if (room.players.first?.id.startsWith("bot:")) room.bot.side = "first";
+    else if (room.players.second?.id.startsWith("bot:")) room.bot.side = "second";
+  }
   room.status = room.players.first && room.players.second ? "playing" : "waiting";
 }
 
@@ -269,6 +287,8 @@ export function snapshotFor(room: Room, you: { role: Role; side: Side | null }):
     result: room.result,
     // Phe đang bị chiếu (vd cờ tướng) — engine nào không có khái niệm này thì null.
     check: getEngine(room.gameType).getCheck?.(room.state) ?? null,
+    // Chơi với máy: cấp độ bot để client hiển thị + bật nút Gợi ý.
+    bot: room.bot ? { level: room.bot.level } : undefined,
     rematch: {
       first: room.rematchVotes.has("first"),
       second: room.rematchVotes.has("second"),
@@ -292,6 +312,7 @@ export function listPublicRooms(): PublicRoomInfo[] {
   const out: PublicRoomInfo[] = [];
   for (const room of rooms.values()) {
     if (!room.isPublic || room.status !== "waiting") continue;
+    if (room.bot) continue; // phòng chơi với máy không hiện ở sảnh công khai
     const { first, second } = room.players;
     // Khi waiting, tối đa 1 ghế có người -> phe còn trống là phe chưa có slot.
     const openSide: Side | null = !first ? "first" : !second ? "second" : null;

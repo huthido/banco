@@ -28,6 +28,14 @@ export type PlayerSlot = {
   connected: boolean;
 };
 
+/** Thông tin bot trong phòng (chế độ chơi với máy). */
+export type BotInfo = {
+  /** Cấp độ bot: 0 = Tập chơi, 1 = Dễ, 2 = Trung bình, 3 = Khá, 4 = Cao. */
+  level: number;
+  /** Phe bot đang ngồi (đổi sau mỗi rematch). */
+  side: Side;
+};
+
 /** Trạng thái phòng đầy đủ phía server. */
 export type Room = {
   id: string;
@@ -50,6 +58,8 @@ export type Room = {
   timeControl: TimeControl;
   /** Trạng thái đồng hồ (chỉ khi timeControl.mode === "limited"). */
   clock?: ClockState;
+  /** Chơi với máy: thông tin bot (không có nghĩa là phòng PvP). */
+  bot?: BotInfo;
 };
 
 /** Thông tin một người chơi gửi xuống client (không lộ socketId nội bộ là ok). */
@@ -72,6 +82,8 @@ export type RoomSnapshot = {
   result?: GameResult;
   /** Phe đang bị chiếu (loại cờ có khái niệm chiếu — vd cờ tướng); null nếu không. */
   check: Side | null;
+  /** Chơi với máy: cấp độ bot (client dùng để hiển thị + bật nút Gợi ý). */
+  bot?: { level: number };
   rematch: { first: boolean; second: boolean };
   /** Cấu hình thời gian của phòng. */
   timeControl: TimeControl;
