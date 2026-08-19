@@ -16,16 +16,19 @@ export function BoardSay({ onSend }: { onSend: (text: string) => void }) {
 
   return (
     <div className="mt-3 w-[min(96vw,480px)]">
-      <div className="mb-2 flex flex-wrap justify-center gap-1.5">
-        {QUICK.map((q) => (
-          <button
-            key={q}
-            onClick={() => submit(q)}
-            className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-          >
-            {q}
-          </button>
-        ))}
+      {/* Hàng nút nhanh: luôn 1 dòng, scroll ngang khi tràn (compact trên mobile) */}
+      <div className="no-scrollbar mb-2 overflow-x-auto">
+        <div className="mx-auto flex w-max items-center gap-1.5 px-0.5 py-0.5">
+          {QUICK.map((q) => (
+            <button
+              key={q}
+              onClick={() => submit(q)}
+              className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              {q}
+            </button>
+          ))}
+        </div>
       </div>
       <form
         onSubmit={(e) => {
