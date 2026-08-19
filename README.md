@@ -31,6 +31,9 @@ Tạo bàn cờ, mời đối thủ và người xem chỉ bằng một đườn
 - ✅ **Bố cục mobile cố định bàn cờ** — trên điện thoại, bàn cờ luôn hiện phía trên (tự co
   vừa màn hình), nội dung phía dưới (người chơi, lịch sử nước, chat) cuộn riêng; áp dụng
   cho mọi loại cờ.
+- ✅ **Chơi với máy (bot AI)** — Caro, Vua, Tướng, Đam với **5 cấp độ**: Tập chơi (bot rất yếu +
+  có nút **💡 Gợi ý** để học cách chơi), Dễ, Trung bình, Khá, Cao. Chọn "🤖 Chơi với máy" khi
+  tạo bàn; đồng hồ/đánh lại hoạt động như PvP. Cờ vây: sắp ra mắt. (Bot ở `src/lib/bots/`.)
 - ✅ **Lưu bàn cờ (IndexedDB)** — tự lưu ở trình duyệt; trang chủ có danh sách "Bàn cờ đã lưu"
   để **mở lại / mời lại / xoá**. Mở lại còn **tự khôi phục** ván trên server nếu server đã
   restart (in-memory) — gửi lại snapshot đã lưu để dựng lại đúng thế cờ.
