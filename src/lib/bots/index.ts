@@ -4,16 +4,17 @@ import { gomokuBot } from "./gomoku";
 import { chessBot } from "./chess";
 import { xiangqiBot } from "./xiangqi";
 import { checkersBot } from "./checkers";
+import { goBot } from "./go";
 
 /**
- * Registry bot theo loại cờ. Loại chưa có bot (vd cờ vây) -> undefined:
- * UI không cho chọn "Chơi với máy".
+ * Registry bot theo loại cờ.
  */
 const registry: Partial<Record<GameType, BotBrain>> = {
   gomoku: gomokuBot as BotBrain,
   chess: chessBot as BotBrain,
   xiangqi: xiangqiBot as BotBrain,
   checkers: checkersBot as BotBrain,
+  go: goBot as BotBrain,
 };
 
 /** Lấy bot cho loại cờ; null nếu loại này chưa có bot. */

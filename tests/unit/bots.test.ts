@@ -5,10 +5,12 @@ import { gomokuBot } from "../../src/lib/bots/gomoku";
 import { chessBot } from "../../src/lib/bots/chess";
 import { xiangqiBot } from "../../src/lib/bots/xiangqi";
 import { checkersBot } from "../../src/lib/bots/checkers";
+import { goBot } from "../../src/lib/bots/go";
 import { gomokuEngine } from "../../src/lib/games/gomoku";
 import { chessEngine } from "../../src/lib/games/chess";
 import { xiangqiEngine } from "../../src/lib/games/xiangqi";
 import { checkersEngine } from "../../src/lib/games/checkers";
+import { goEngine } from "../../src/lib/games/go";
 import type { GameEngine } from "../../src/lib/games/engine";
 
 const LEVELS: BotLevel[] = BOT_LEVELS.map((b) => b.level);
@@ -50,3 +52,4 @@ checkBot("gomoku", gomokuBot, gomokuEngine);
 checkBot("chess", chessBot, chessEngine);
 checkBot("xiangqi", xiangqiBot, xiangqiEngine);
 checkBot("checkers", checkersBot, checkersEngine);
+checkBot("go", goBot, goEngine);
