@@ -22,6 +22,6 @@ app.prepare().then(() => {
   registerSocketHandlers(io);
 
   httpServer.listen(port, () => {
-    console.log(`> BanCo ready on http://${hostname}:${port}`);
+    console.log(`> BànCờ ready on http://${hostname}:${port}`);
   });
 });

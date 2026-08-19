@@ -9,7 +9,7 @@ export default function HomePage() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-6">
       <header className="mb-6 text-center">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">♟️ BanCo</h1>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">♟️ BànCờ</h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 sm:text-base">
           Tạo bàn cờ, mời đối thủ và người xem chỉ bằng một đường link.
         </p>

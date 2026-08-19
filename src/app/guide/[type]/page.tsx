@@ -18,7 +18,7 @@ export async function generateMetadata({
   const { type } = await params;
   const meta = GAME_CATALOG.find((g) => g.type === type);
   return {
-    title: meta ? `Luật ${meta.name} — BanCo` : "Hướng dẫn — BanCo",
+    title: meta ? `Luật ${meta.name} — BànCờ` : "Hướng dẫn — BànCờ",
     description: meta ? GUIDES[meta.type]?.intro : undefined,
   };
 }

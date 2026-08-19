@@ -1,4 +1,4 @@
-# BanCo — Chơi cờ trực tuyến
+# BànCờ — Chơi cờ trực tuyến
 
 Tạo bàn cờ, mời đối thủ và người xem chỉ bằng một đường link. Chơi ẩn danh, thời gian thực.
 

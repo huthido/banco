@@ -4,7 +4,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { THEME_INIT_SCRIPT } from "@/lib/client/theme";
 
 export const metadata: Metadata = {
-  title: "BanCo — Chơi cờ trực tuyến",
+  title: "BànCờ — Chơi cờ trực tuyến",
   description: "Tạo bàn cờ, mời đối thủ và người xem chỉ bằng một đường link.",
 };
 

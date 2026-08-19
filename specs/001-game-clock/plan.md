@@ -6,7 +6,7 @@
 
 ## Summary
 
-Thêm giới hạn thời gian (time control) cho mọi ván cờ của BanCo: mỗi người chơi có một quỹ thời gian,
+Thêm giới hạn thời gian (time control) cho mọi ván cờ của BànCờ: mỗi người chơi có một quỹ thời gian,
 đồng hồ của người tới lượt chạy lùi, hết giờ là thua. Cách tiếp cận: **đồng hồ do server làm chủ**
 (server in-memory là nguồn chân lý), client chỉ hiển thị bằng cách nội suy giữa các lần đồng bộ. Logic
 đồng hồ độc lập với luật từng loại cờ nên dùng chung cho cả 5 engine. Cấu hình thời gian gắn vào phòng
