@@ -1,14 +1,13 @@
 import { customAlphabet } from "nanoid";
 
-// Bảng chữ dễ đọc (bỏ ký tự dễ nhầm: 0/O, 1/l/I) cho mã phòng.
-const roomAlphabet = "23456789abcdefghijkmnpqrstuvwxyz";
-const nanoRoom = customAlphabet(roomAlphabet, 6);
+// Mã phòng là số ngẫu nhiên 6 chữ số — dễ đọc, dễ nhớ hơn chữ lẫn số.
+const nanoRoom = customAlphabet("0123456789", 6);
 const nanoToken = customAlphabet(
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
   16
 );
 
-/** Sinh mã phòng ngắn 6 ký tự, vd "k7m2pq". */
+/** Sinh mã phòng số ngẫu nhiên 6 chữ số, vd "482913". */
 export function genRoomId(): string {
   return nanoRoom();
 }
