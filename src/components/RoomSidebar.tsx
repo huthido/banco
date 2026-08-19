@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { RoomSnapshot } from "@/types/room";
 import type { GameMeta } from "@/types/game";
 import { InviteLinks } from "./InviteLinks";
+import { BOT_LEVELS } from "@/lib/bots";
 
 function PlayerRow({
   label,
@@ -64,6 +65,11 @@ export function RoomSidebar({
       <div>
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold">{meta.name}</h2>
+          {snapshot.bot && (
+            <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900 dark:text-violet-300">
+              🤖 Máy · {BOT_LEVELS[snapshot.bot.level]?.name ?? snapshot.bot.level}
+            </span>
+          )}
           {isPublic && (
             <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
               🌐 Công khai

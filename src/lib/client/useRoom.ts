@@ -46,6 +46,10 @@ export type UseRoom = {
   sendChat: (text: string) => void;
   sendReaction: (emoji: string) => void;
   sendBoardMessage: (text: string) => void;
+  /** Yêu cầu gợi ý nước đi (phòng chơi với máy). */
+  requestHint: () => Promise<{ ok: boolean; move?: unknown; error?: string }>;
+  /** Hiện thông báo nổi (vd lỗi gợi ý). */
+  pushNotice: (text: string, kind?: Notice["kind"]) => void;
 };
 
 type BoardSay = { id: number; name: string; text: string };
@@ -72,7 +76,7 @@ export function useRoom(
   const noticeSeq = useRef(0);
   const recordedRef = useRef<Set<string>>(new Set());
 
-  const pushNotice = useCallback((text: string, kind: Notice["kind"]) => {
+  const pushNotice = useCallback((text: string, kind: Notice["kind"] = "info") => {
     const id = `n${noticeSeq.current++}`;
     setNotices((prev) => [...prev.slice(-4), { id, text, kind }]);
     // Tự ẩn sau vài giây — tránh che phủ vùng click (nhất là trên mobile).
@@ -246,6 +250,18 @@ export function useRoom(
     (text: string) => socketRef.current?.emit("board:say", { roomId, text }),
     [roomId]
   );
+  const requestHint = useCallback(
+    (): Promise<{ ok: boolean; move?: unknown; error?: string }> =>
+      new Promise((resolve) => {
+        const s = socketRef.current;
+        if (!s || !s.connected) {
+          resolve({ ok: false, error: "Mất kết nối." });
+          return;
+        }
+        s.emit("hint:request", { roomId }, (res) => resolve(res));
+      }),
+    [roomId]
+  );
 
   return {
     connected,
@@ -263,5 +279,7 @@ export function useRoom(
     sendChat,
     sendReaction,
     sendBoardMessage,
+    requestHint,
+    pushNotice,
   };
 }

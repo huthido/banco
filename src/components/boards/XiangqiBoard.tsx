@@ -16,11 +16,14 @@ export function XiangqiBoard({
   canPlay,
   mySide = "first",
   onMove,
+  hint,
 }: {
   state: XiangqiState;
   canPlay: boolean;
   mySide?: Side | null;
   onMove: (from: { x: number; y: number }, to: { x: number; y: number }) => void;
+  /** Nước gợi ý (chơi với máy) — highlight ô đi và ô đến. */
+  hint?: { fx: number; fy: number; tx: number; ty: number } | null;
 }) {
   const [sel, setSel] = useState<{ x: number; y: number } | null>(null);
   useEffect(() => setSel(null), [state]);
@@ -97,6 +100,9 @@ export function XiangqiBoard({
                 <span className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-boardline/60 dark:bg-amber-100/25" />
                 <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-boardline/60 dark:bg-amber-100/25" />
                 {isLast && <span className="absolute inset-[10%] rounded-full bg-yellow-300/40" />}
+                {hint && ((hint.fx === x && hint.fy === y) || (hint.tx === x && hint.ty === y)) && (
+                  <span className="absolute inset-[6%] z-20 rounded-full bg-cyan-400/40 ring-2 ring-cyan-500" />
+                )}
                 {c && (
                   <span
                     className={`relative z-10 flex h-[86%] w-[86%] items-center justify-center rounded-full border-2 bg-[#f3e2c0] font-semibold leading-none shadow dark:bg-[#e6d2a8] ${

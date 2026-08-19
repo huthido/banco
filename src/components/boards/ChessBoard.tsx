@@ -22,11 +22,14 @@ export function ChessBoard({
   canPlay,
   orientation = "first",
   onMove,
+  hint,
 }: {
   state: ChessState;
   canPlay: boolean;
   orientation?: Side | null;
   onMove: (from: string, to: string) => void;
+  /** Nước gợi ý (chơi với máy) — highlight ô đi và ô đến. */
+  hint?: { from: string; to: string } | null;
 }) {
   const chess = useMemo(() => new Chess(state.fen), [state.fen]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -99,6 +102,9 @@ export function ChessBoard({
                 style={{ backgroundColor: light ? "#e9c89b" : "#a9744a" }}
               >
                 {isLast && <span className="absolute inset-0 bg-yellow-300/45" />}
+                {hint && (hint.from === square || hint.to === square) && (
+                  <span className="absolute inset-0 bg-cyan-400/40 ring-2 ring-cyan-500" />
+                )}
                 {checkSquare === square && <span className="absolute inset-0 bg-red-500/50" />}
                 {selected === square && <span className="absolute inset-0 bg-emerald-400/50" />}
                 {piece && (

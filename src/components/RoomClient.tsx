@@ -38,6 +38,10 @@ export function RoomClient({
   const room = useRoom(roomId, name, inviteToken, wantPlay);
   const { snapshot, result, notices, joinError } = room;
 
+  // Nước gợi ý từ nút "💡 Gợi ý" (chơi với máy) — reset mỗi khi thế cờ đổi.
+  const [hint, setHint] = useState<unknown>(null);
+  useEffect(() => setHint(null), [snapshot]);
+
   // Đo vùng bàn cờ để co bàn cờ vừa chiều cao (mobile: bàn luôn hiện, phần dưới scroll).
   const boardAreaRef = useRef<HTMLDivElement>(null);
   const [boardWidth, setBoardWidth] = useState<number | null>(null);
@@ -141,6 +145,7 @@ export function RoomClient({
                     state={snapshot.state as GomokuState}
                     canPlay={youCanPlay}
                     onPlace={(x, y) => room.makeMove({ x, y })}
+                    hint={hint as { x: number; y: number } | null}
                   />
                 )}
                 {snapshot.gameType === "chess" && (
@@ -149,6 +154,7 @@ export function RoomClient({
                     canPlay={youCanPlay}
                     orientation={snapshot.you.side}
                     onMove={(from, to) => room.makeMove({ from, to })}
+                    hint={hint as { from: string; to: string } | null}
                   />
                 )}
                 {snapshot.gameType === "xiangqi" && (
@@ -159,6 +165,7 @@ export function RoomClient({
                     onMove={(from, to) =>
                       room.makeMove({ fx: from.x, fy: from.y, tx: to.x, ty: to.y })
                     }
+                    hint={hint as { fx: number; fy: number; tx: number; ty: number } | null}
                   />
                 )}
                 {snapshot.gameType === "checkers" && (
@@ -167,6 +174,7 @@ export function RoomClient({
                     canPlay={youCanPlay}
                     mySide={snapshot.you.side}
                     onMove={(move) => room.makeMove(move)}
+                    hint={hint as { path: { x: number; y: number }[] } | null}
                   />
                 )}
                 {snapshot.gameType === "go" && (
@@ -212,7 +220,7 @@ export function RoomClient({
 
             {/* Nút điều khiển cho người chơi */}
             {snapshot.you.role === "player" && (
-              <div className="mt-3 flex gap-3">
+              <div className="mt-3 flex flex-wrap justify-center gap-3">
                 {snapshot.status === "playing" && (
                   <button
                     onClick={room.resign}
@@ -221,15 +229,30 @@ export function RoomClient({
                     Xin thua
                   </button>
                 )}
+                {/* Gợi ý nước đi — chỉ khi chơi với máy và tới lượt mình */}
+                {snapshot.bot && snapshot.status === "playing" && youCanPlay && (
+                  <button
+                    onClick={async () => {
+                      const r = await room.requestHint();
+                      if (r.ok) setHint(r.move);
+                      else room.pushNotice(r.error ?? "Không gợi ý được.", "error");
+                    }}
+                    className="rounded-lg border border-cyan-300 bg-cyan-50 px-4 py-2 text-sm font-medium text-cyan-700 hover:bg-cyan-100 dark:border-cyan-500/60 dark:bg-cyan-950 dark:text-cyan-300 dark:hover:bg-cyan-900"
+                  >
+                    💡 Gợi ý
+                  </button>
+                )}
                 {snapshot.status === "finished" && (
                   <button
                     onClick={room.rematch}
                     className="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700"
                   >
                     Đánh lại{" "}
-                    {snapshot.rematch.first || snapshot.rematch.second
-                      ? `(${(snapshot.rematch.first ? 1 : 0) + (snapshot.rematch.second ? 1 : 0)}/2)`
-                      : ""}
+                    {snapshot.bot
+                      ? ""
+                      : snapshot.rematch.first || snapshot.rematch.second
+                        ? `(${(snapshot.rematch.first ? 1 : 0) + (snapshot.rematch.second ? 1 : 0)}/2)`
+                        : ""}
                   </button>
                 )}
               </div>

@@ -7,10 +7,13 @@ export function GomokuBoard({
   state,
   canPlay,
   onPlace,
+  hint,
 }: {
   state: GomokuState;
   canPlay: boolean;
   onPlace: (x: number, y: number) => void;
+  /** Nước gợi ý (chơi với máy) — highlight ô cần đi. */
+  hint?: { x: number; y: number } | null;
 }) {
   const { grid, cols, rows, last } = state;
 
@@ -48,6 +51,9 @@ export function GomokuBoard({
                         : "border border-slate-300 bg-white shadow"
                     } ${isLast ? "ring-2 ring-red-500" : ""}`}
                   />
+                )}
+                {hint && hint.x === x && hint.y === y && (
+                  <span className="pointer-events-none absolute inset-0 z-20 rounded-full bg-cyan-400/40 ring-2 ring-cyan-500" />
                 )}
               </button>
             );

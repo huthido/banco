@@ -20,11 +20,14 @@ export function CheckersBoard({
   canPlay,
   mySide = "first",
   onMove,
+  hint,
 }: {
   state: CheckersState;
   canPlay: boolean;
   mySide?: Side | null;
   onMove: (move: CheckersMove) => void;
+  /** Nước gợi ý (chơi với máy) — highlight đường đi. */
+  hint?: { path: { x: number; y: number }[] } | null;
 }) {
   const [path, setPath] = useState<Sq[]>([]);
   useEffect(() => setPath([]), [state]);
@@ -93,6 +96,9 @@ export function CheckersBoard({
                 style={{ backgroundColor: dark ? "#a9744a" : "#e9c89b" }}
               >
                 {isLast && <span className="absolute inset-0 bg-yellow-300/35" />}
+                {hint && hint.path.some((p) => p.x === x && p.y === y) && (
+                  <span className="absolute inset-0 bg-cyan-400/40 ring-2 ring-cyan-500" />
+                )}
                 {inPath && <span className="absolute inset-0 bg-emerald-400/40" />}
                 {piece && (
                   <span
